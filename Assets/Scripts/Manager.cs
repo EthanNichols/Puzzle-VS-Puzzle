@@ -5,7 +5,6 @@ using UnityEngine;
 public class Manager : MonoBehaviour {
 
     public int players = 1;
-
     public GameObject Canvas;
 
 	// Use this for initialization

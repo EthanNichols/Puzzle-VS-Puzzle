@@ -9,6 +9,7 @@ public class PlayField : MonoBehaviour {
 
     public float tileSize;
     public Dictionary<Vector2, Vector2> tilePositions = new Dictionary<Vector2, Vector2>();
+    public Dictionary<Vector2, GameObject> tileObjects = new Dictionary<Vector2, GameObject>();
 
     private GameObject tempBackgroundTile;
 
@@ -51,10 +52,11 @@ public class PlayField : MonoBehaviour {
                 GameObject newTile = Instantiate(tempBackgroundTile, Vector2.zero, Quaternion.identity, background.transform);
                 newTile.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, tileSize);
                 newTile.transform.localPosition = new Vector3(x + ((width + 1) % 2) / 2f, y + ((height + 1) % 2) / 2f) * tileSize;
-                newTile.name = x + ", " + y;
+                newTile.name = (x + width/2) + ", " + (y + height/2);
 
                 //Add the grid and actual position to the dictionary
                 tilePositions[new Vector2(x + width / 2, y + height / 2)] = newTile.transform.localPosition;
+                tileObjects[new Vector2(x + width / 2, y + height / 2)] = newTile;
             }
         }
     }
@@ -72,6 +74,7 @@ public class PlayField : MonoBehaviour {
             for (int y=height; y<height * 2; y++)
             {
                 tilePositions[new Vector2(x, y)] = new Vector2(int.MaxValue, int.MaxValue);
+                tileObjects[new Vector2(x, y)] = null;
             }
         }
     }

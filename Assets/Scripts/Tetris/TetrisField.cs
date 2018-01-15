@@ -14,6 +14,9 @@ public class TetrisField : PlayField
 
     public bool gameOver = false;
 
+    private List<int> linesToClear = new List<int>();
+    private float clearLineTimer;
+
     private GameObject tetrisPieceObj;
     private List<Vector2> spawnLocations = new List<Vector2>();
 
@@ -56,10 +59,14 @@ public class TetrisField : PlayField
         if (gameOver) { return; }
 
         //If there is no tetris piece to move, spawn one
-        if (tetrisPiece == null)
+        if (tetrisPiece == null &&
+            linesToClear.Count == 0)
         {
             SpawnPiece();
         }
+
+        if (clearLineTimer > 0) { clearLineTimer -= Time.deltaTime; }
+        if (clearLineTimer <= 0 && linesToClear.Count > 0) { ClearLines(); }
     }
 
     /// <summary>
@@ -206,7 +213,7 @@ public class TetrisField : PlayField
     {
         //Set the gameobject if there isn't one set already
         if (tileObjects[pos] == null) { tileObjects[pos] = tile; }
-        
+
         //Set the image if there is a gameobject there, and set it to be occupied
         tileObjects[pos].GetComponent<Image>().sprite = tile.GetComponent<Image>().sprite;
         tileOccupancy[pos] = true;
@@ -216,11 +223,8 @@ public class TetrisField : PlayField
     /// Test for lines that can be cleared and clear them
     /// </summary>
     /// <param name="lines">The lines that can be cleared</param>
-    public void ClearLines(List<int> lines)
+    public void GetClearLines(List<int> lines)
     {
-        //Lines that will be cleared
-        List<int> linesToClear = new List<int>();
-
         //Go through the lines that can be cleared
         for (int i = 0; i < lines.Count; i++)
         {
@@ -254,15 +258,21 @@ public class TetrisField : PlayField
             {
                 Vector2 pos = new Vector2(x, line);
                 tileOccupancy[pos] = false;
-                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_15"];
+                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_14"];
             }
         }
 
+        clearLineTimer = .2f;
+    }
+
+    private void ClearLines()
+    {
         //The height to move the tiles down
         int fallHeight = 1;
 
         for (int y = linesToClear[0] + 1; y < height * 2; y++)
         {
+
             //Increase the height tiles will drop if the y is equal to a cleared line
             if (linesToClear.Count > fallHeight)
             {
@@ -273,10 +283,15 @@ public class TetrisField : PlayField
             {
                 Vector2 pos = new Vector2(x, y);
 
-                //If tile object doesn't exist continue
-                if (tileObjects[pos] == null) { continue; }
+                if (tileObjects[pos + Vector2.down * fallHeight] == null) { continue; }
 
-                //if (tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = tileObjects[pos].GetComponent<Image>().sprite)
+                //If tile object doesn't exist continue
+                if (tileObjects[pos] == null)
+                {
+                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_15"];
+                    tileOccupancy[pos + Vector2.down * fallHeight] = false;
+                    continue;
+                }
 
                 //Set the tile on top of the gap to the bottom of the gap and set the position to be occupied
                 tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = tileObjects[pos].GetComponent<Image>().sprite;
@@ -286,5 +301,7 @@ public class TetrisField : PlayField
                 tileOccupancy[pos] = false;
             }
         }
+
+        linesToClear.Clear();
     }
 }

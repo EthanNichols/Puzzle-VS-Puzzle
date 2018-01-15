@@ -7,6 +7,8 @@ public class TetrisPiece : MonoBehaviour
 {
 
     [HideInInspector]
+    public GameObject ghostPiece;
+
     public char shape;
     public float tileSize;
     public TetrisField field;
@@ -33,13 +35,17 @@ public class TetrisPiece : MonoBehaviour
 
         moveTimer = int.MaxValue;
 
-        if (CanFall()) { fallingTimer = 0; }
-        else { field.gameOver = true; }
+        if (ghostPiece != null)
+        {
+            if (CanFall()) { fallingTimer = 0; }
+            else { field.gameOver = true; }
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (!ghostPiece) { return; }
 
         //Start the timers
         fallingTimer -= Time.deltaTime;
@@ -74,6 +80,18 @@ public class TetrisPiece : MonoBehaviour
         //Set the position of the entire piece
         transform.localPosition = field.tilePositions[spawnPos + Vector2.down] + Vector2.up * tileSize;
         rotationCenter = spawnPos;
+
+        ghostPiece = Instantiate(gameObject, Vector3.zero, Quaternion.identity, transform.parent.transform);
+        ghostPiece.name = "GhostPiece";
+        ghostPiece.GetComponent<TetrisPiece>().tiles.Clear();
+        ghostPiece.GetComponent<TetrisPiece>().ghostPiece = null;
+        foreach (Transform tile in ghostPiece.transform)
+        {
+            ghostPiece.GetComponent<TetrisPiece>().tiles.Add(tile.gameObject);
+            tile.GetComponent<Image>().color = new Color(1, 1, 1, .5f);
+        }
+
+        ResetGhostPiece();
     }
 
     /// <summary>
@@ -86,9 +104,12 @@ public class TetrisPiece : MonoBehaviour
             //Make sure the piece can fall a tile
             if (CanFall())
             {
+
                 //Move all of the tiles in the piece down a tile
                 for (int i = 0; i < tilePositions.Count; i++)
                 {
+                    if (!ghostPiece && i == 0) { Debug.Log(tilePositions[i]); }
+
                     tilePositions[i] += Vector2.down;
                     if (tilePositions[i].y < 20) { tiles[i].SetActive(true); }
                     else { tiles[i].SetActive(false); }
@@ -100,6 +121,8 @@ public class TetrisPiece : MonoBehaviour
             }
             else
             {
+                if (ghostPiece == null) { fallingTimer = int.MaxValue; return; }
+
                 //The lines that could be clear
                 List<int> clearLines = new List<int>();
 
@@ -111,9 +134,10 @@ public class TetrisPiece : MonoBehaviour
                 }
 
                 //Determine if a line can be cleared and clear it
-                field.ClearLines(clearLines);
+                field.GetClearLines(clearLines);
 
                 //Destroy the tetris piece
+                Destroy(ghostPiece);
                 Destroy(gameObject);
                 break;
             }
@@ -121,6 +145,8 @@ public class TetrisPiece : MonoBehaviour
 
         //Reset the timer
         fallingTimer = fallingTimerReset;
+
+        ResetGhostPiece();
     }
 
     /// <summary>
@@ -144,7 +170,6 @@ public class TetrisPiece : MonoBehaviour
     /// </summary>
     private void MoveInput()
     {
-
         //The timer between automatic movement when a button is held down
         moveTimer -= Time.deltaTime;
 
@@ -218,6 +243,8 @@ public class TetrisPiece : MonoBehaviour
         //Move the overall piece to the new position
         transform.position += (Vector3)(direction * tileSize);
         rotationCenter += direction;
+
+        ResetGhostPiece();
     }
 
     /// <summary>
@@ -261,10 +288,10 @@ public class TetrisPiece : MonoBehaviour
             }
             else if (newRotation == 3)
             {
-                newPositions[0] = new Vector2(-1, 1);
-                newPositions[1] = new Vector2(-1, 0);
-                newPositions[2] = new Vector2(-1, -1);
-                newPositions[3] = new Vector2(-1, -2);
+                newPositions[0] = new Vector2(0, 1);
+                newPositions[1] = new Vector2(0, 0);
+                newPositions[2] = new Vector2(0, -1);
+                newPositions[3] = new Vector2(0, -2);
             }
         }
         else if (shape == 't')
@@ -443,5 +470,27 @@ public class TetrisPiece : MonoBehaviour
 
         //Set the new rotation of the piece
         rotation = newRotation;
+
+        ResetGhostPiece();
+    }
+
+    private void ResetGhostPiece()
+    {
+        if (!ghostPiece) { return; }
+        Debug.Log("Reset");
+
+        ghostPiece.transform.localPosition = transform.localPosition;
+        ghostPiece.GetComponent<TetrisPiece>().rotationCenter = rotationCenter;
+        ghostPiece.GetComponent<TetrisPiece>().rotation = rotation;
+        ghostPiece.GetComponent<TetrisPiece>().tilePositions = new List<Vector2>(tilePositions);
+
+        ghostPiece.GetComponent<TetrisPiece>().fallingTimer = int.MinValue;
+        ghostPiece.GetComponent<TetrisPiece>().fallingTimerReset = 0;
+        ghostPiece.GetComponent<TetrisPiece>().Fall();
+
+        for (int i=0; i<tilePositions.Count; i++)
+        {
+            ghostPiece.GetComponent<TetrisPiece>().tiles[i].transform.localPosition = tiles[i].transform.localPosition;
+        }
     }
 }

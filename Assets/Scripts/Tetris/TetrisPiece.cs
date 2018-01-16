@@ -10,6 +10,7 @@ public class TetrisPiece : MonoBehaviour
     public GameObject ghostPiece;
 
     public char shape;
+    public Sprite tileSprite;
     public float tileSize;
     public TetrisField field;
 
@@ -37,8 +38,13 @@ public class TetrisPiece : MonoBehaviour
 
         if (ghostPiece != null)
         {
-            if (CanFall()) { fallingTimer = 0; }
+            if (CanFall()) { fallingTimer = 0; Fall(); }
             else { field.gameOver = true; }
+
+            if (shape == 'o' || shape == 's' || shape == 'z')
+            {
+                if (CanFall()) { fallingTimer = 0; Fall(); }
+            }
         }
     }
 
@@ -68,6 +74,7 @@ public class TetrisPiece : MonoBehaviour
             //Set the position and size of the tile piece
             tile.transform.localPosition = formation.Peek() * tileSize;
             tile.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, tileSize);
+            tile.GetComponent<Image>().sprite = tileSprite;
 
             //Set the grid position of the tile piece
             tilePositions.Add(spawnPos + formation.Peek());
@@ -108,8 +115,6 @@ public class TetrisPiece : MonoBehaviour
                 //Move all of the tiles in the piece down a tile
                 for (int i = 0; i < tilePositions.Count; i++)
                 {
-                    if (!ghostPiece && i == 0) { Debug.Log(tilePositions[i]); }
-
                     tilePositions[i] += Vector2.down;
                     if (tilePositions[i].y < 20) { tiles[i].SetActive(true); }
                     else { tiles[i].SetActive(false); }
@@ -300,28 +305,28 @@ public class TetrisPiece : MonoBehaviour
             {
                 newPositions[0] = new Vector2(-1, 0);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, 1);
+                newPositions[2] = new Vector2(0, -1);
                 newPositions[3] = new Vector2(1, 0);
             }
             else if (newRotation == 1)
             {
-                newPositions[0] = new Vector2(0, 1);
+                newPositions[0] = new Vector2(-1, 0);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(1, 0);
+                newPositions[2] = new Vector2(0, 1);
                 newPositions[3] = new Vector2(0, -1);
             }
             else if (newRotation == 2)
             {
                 newPositions[0] = new Vector2(-1, 0);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, -1);
+                newPositions[2] = new Vector2(0, 1);
                 newPositions[3] = new Vector2(1, 0);
             }
             else if (newRotation == 3)
             {
-                newPositions[0] = new Vector2(-1, 0);
+                newPositions[0] = new Vector2(0, 1);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, 1);
+                newPositions[2] = new Vector2(1, 0);
                 newPositions[3] = new Vector2(0, -1);
             }
         }
@@ -329,7 +334,7 @@ public class TetrisPiece : MonoBehaviour
         {
             if (newRotation == 0)
             {
-                newPositions[0] = new Vector2(-1, 1);
+                newPositions[0] = new Vector2(1, -1);
                 newPositions[1] = new Vector2(0, 0);
                 newPositions[2] = new Vector2(-1, 0);
                 newPositions[3] = new Vector2(1, 0);
@@ -338,22 +343,22 @@ public class TetrisPiece : MonoBehaviour
             {
                 newPositions[0] = new Vector2(0, 1);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(1, 1);
-                newPositions[3] = new Vector2(0, -1);
+                newPositions[2] = new Vector2(0, -1);
+                newPositions[3] = new Vector2(-1, -1);
             }
             else if (newRotation == 2)
             {
                 newPositions[0] = new Vector2(-1, 0);
                 newPositions[1] = new Vector2(0, 0);
                 newPositions[2] = new Vector2(1, 0);
-                newPositions[3] = new Vector2(1, -1);
+                newPositions[3] = new Vector2(-1, 1);
             }
             else if (newRotation == 3)
             {
                 newPositions[0] = new Vector2(0, 1);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, -1);
-                newPositions[3] = new Vector2(-1, -1);
+                newPositions[2] = new Vector2(1, 1);
+                newPositions[3] = new Vector2(0, -1);
             }
         }
         else if (shape == 'l')
@@ -363,28 +368,28 @@ public class TetrisPiece : MonoBehaviour
                 newPositions[0] = new Vector2(-1, 0);
                 newPositions[1] = new Vector2(0, 0);
                 newPositions[2] = new Vector2(1, 0);
-                newPositions[3] = new Vector2(1, 1);
+                newPositions[3] = new Vector2(-1, -1);
             }
             else if (newRotation == 1)
             {
-                newPositions[0] = new Vector2(0, 1);
+                newPositions[0] = new Vector2(0, -1);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, -1);
-                newPositions[3] = new Vector2(1, -1);
+                newPositions[2] = new Vector2(0, 1);
+                newPositions[3] = new Vector2(-1, 1);
             }
             else if (newRotation == 2)
             {
                 newPositions[0] = new Vector2(1, 0);
                 newPositions[1] = new Vector2(0, 0);
                 newPositions[2] = new Vector2(-1, 0);
-                newPositions[3] = new Vector2(-1, -1);
+                newPositions[3] = new Vector2(1, 1);
             }
             else if (newRotation == 3)
             {
-                newPositions[0] = new Vector2(0, -1);
+                newPositions[0] = new Vector2(0, 1);
                 newPositions[1] = new Vector2(0, 0);
-                newPositions[2] = new Vector2(0, 1);
-                newPositions[3] = new Vector2(-1, 1);
+                newPositions[2] = new Vector2(0, -1);
+                newPositions[3] = new Vector2(1, -1);
             }
         }
         else if (shape == 's')
@@ -465,6 +470,9 @@ public class TetrisPiece : MonoBehaviour
         {
             tilePositions[i] = rotationCenter + newPositions[i];
 
+            if (tilePositions[i].y < 20) { tiles[i].SetActive(true); }
+            else { tiles[i].SetActive(false); }
+
             tiles[i].transform.localPosition = newPositions[i] * tileSize;
         }
 
@@ -474,10 +482,12 @@ public class TetrisPiece : MonoBehaviour
         ResetGhostPiece();
     }
 
+    /// <summary>
+    /// Return the ghost piece to the actual piece location and set all the tile positions
+    /// </summary>
     private void ResetGhostPiece()
     {
         if (!ghostPiece) { return; }
-        Debug.Log("Reset");
 
         ghostPiece.transform.localPosition = transform.localPosition;
         ghostPiece.GetComponent<TetrisPiece>().rotationCenter = rotationCenter;

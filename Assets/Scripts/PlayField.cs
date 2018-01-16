@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayField : MonoBehaviour {
 
@@ -35,7 +36,7 @@ public class PlayField : MonoBehaviour {
     /// </summary>
     /// <param name="width">Width of the play field</param>
     /// <param name="height">Height of the play field</param>
-    public void CreateField(int width, int height)
+    public void CreateField(int width, int height, Sprite backgroundTile)
     {
         //Empty object to hold all the background tiles
         GameObject background = new GameObject();
@@ -53,6 +54,8 @@ public class PlayField : MonoBehaviour {
                 newTile.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, tileSize);
                 newTile.transform.localPosition = new Vector3(x + ((width + 1) % 2) / 2f, y + ((height + 1) % 2) / 2f) * tileSize;
                 newTile.name = (x + width/2) + ", " + (y + height/2);
+
+                newTile.GetComponent<Image>().sprite = backgroundTile;
 
                 //Add the grid and actual position to the dictionary
                 tilePositions[new Vector2(x + width / 2, y + height / 2)] = newTile.transform.localPosition;

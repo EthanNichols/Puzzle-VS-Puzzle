@@ -6,6 +6,9 @@ using UnityEngine.UI;
 public class TetrisField : PlayField
 {
 
+    public List<int> tileColors = new List<int>() {32, 35, 36, 37, 39, 41, 46};
+    public int backgroundSprite = 78;
+
     [HideInInspector]
     public GameObject tetrisPiece;
 
@@ -17,6 +20,7 @@ public class TetrisField : PlayField
     private List<int> linesToClear = new List<int>();
     private float clearLineTimer;
 
+    private float fallingTimer = 2;
     private GameObject tetrisPieceObj;
     private List<Vector2> spawnLocations = new List<Vector2>();
 
@@ -35,7 +39,7 @@ public class TetrisField : PlayField
         LoadResources();
 
         //Create the visible and hidden play field
-        CreateField(width, height);
+        CreateField(width, height, SpriteSheetManager.sprites["Tiles_" + backgroundSprite]);
         CreateTileBuffer(width, height);
 
         foreach (Vector2 pos in tilePositions.Keys)
@@ -125,7 +129,7 @@ public class TetrisField : PlayField
             case 2:
                 pieceFormation.Enqueue(Vector2.left);
                 pieceFormation.Enqueue(Vector2.zero);
-                pieceFormation.Enqueue(Vector2.up);
+                pieceFormation.Enqueue(Vector2.down);
                 pieceFormation.Enqueue(Vector2.right);
 
                 shape = 't';
@@ -136,7 +140,7 @@ public class TetrisField : PlayField
                 pieceFormation.Enqueue(Vector2.right);
                 pieceFormation.Enqueue(Vector2.zero);
                 pieceFormation.Enqueue(Vector2.left);
-                pieceFormation.Enqueue(new Vector2(-1, 1));
+                pieceFormation.Enqueue(new Vector2(1, -1));
 
                 shape = 'j';
                 break;
@@ -146,7 +150,7 @@ public class TetrisField : PlayField
                 pieceFormation.Enqueue(Vector2.left);
                 pieceFormation.Enqueue(Vector2.zero);
                 pieceFormation.Enqueue(Vector2.right);
-                pieceFormation.Enqueue(new Vector2(1, 1));
+                pieceFormation.Enqueue(new Vector2(-1, -1));
 
                 shape = 'l';
                 break;
@@ -180,10 +184,11 @@ public class TetrisField : PlayField
         tetrisPiece = Instantiate(tetrisPieceObj, transform);
 
         //Set information about the piece
-        tetrisPiece.GetComponent<TetrisPiece>().fallingTimer = 2f;
+        tetrisPiece.GetComponent<TetrisPiece>().fallingTimer = fallingTimer;
         tetrisPiece.GetComponent<TetrisPiece>().shape = shape;
         tetrisPiece.GetComponent<TetrisPiece>().tileSize = tileSize;
         tetrisPiece.GetComponent<TetrisPiece>().field = this;
+        tetrisPiece.GetComponent<TetrisPiece>().tileSprite = SpriteSheetManager.sprites["Tiles_" + tileColors[randPiece]];
 
         //Spawn the piece and set the tile location
         tetrisPiece.GetComponent<TetrisPiece>().SetFormation(spawnPos, pieceFormation);
@@ -212,7 +217,14 @@ public class TetrisField : PlayField
     public void PlaceTile(Vector2 pos, GameObject tile)
     {
         //Set the gameobject if there isn't one set already
-        if (tileObjects[pos] == null) { tileObjects[pos] = tile; }
+        if (tileObjects[pos] == null)
+        {
+            GameObject newTile = Instantiate(tile);
+            newTile.transform.SetParent(transform);
+            newTile.SetActive(false);
+
+            tileObjects[pos] = newTile;
+        }
 
         //Set the image if there is a gameobject there, and set it to be occupied
         tileObjects[pos].GetComponent<Image>().sprite = tile.GetComponent<Image>().sprite;
@@ -258,13 +270,20 @@ public class TetrisField : PlayField
             {
                 Vector2 pos = new Vector2(x, line);
                 tileOccupancy[pos] = false;
-                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_14"];
+
+                int spriteNum = int.Parse(tileObjects[pos].GetComponent<Image>().sprite.name.Split('_')[1]);
+
+                Debug.Log(spriteNum);
+                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_" + (spriteNum - 32)];
             }
         }
 
-        clearLineTimer = .2f;
+        clearLineTimer = .1f;
     }
 
+    /// <summary>
+    /// Remove the tiles that have been cleared and move the rest of the tiles down
+    /// </summary>
     private void ClearLines()
     {
         //The height to move the tiles down
@@ -283,12 +302,13 @@ public class TetrisField : PlayField
             {
                 Vector2 pos = new Vector2(x, y);
 
+                //Go to the next tile if there is no gameobject
                 if (tileObjects[pos + Vector2.down * fallHeight] == null) { continue; }
 
                 //If tile object doesn't exist continue
                 if (tileObjects[pos] == null)
                 {
-                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_15"];
+                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_" + backgroundSprite];
                     tileOccupancy[pos + Vector2.down * fallHeight] = false;
                     continue;
                 }
@@ -299,9 +319,13 @@ public class TetrisField : PlayField
 
                 //Unoccupy the tile on top
                 tileOccupancy[pos] = false;
+
+                //Destroy the gameobject if the position isn't in the visible play area
+                if (pos.y >= 20) { Destroy(tileObjects[pos]); }
             }
         }
 
+        //Clear the list of lines that need to be removed
         linesToClear.Clear();
     }
 }

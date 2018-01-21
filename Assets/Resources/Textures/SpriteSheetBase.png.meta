@@ -1,14 +1,14 @@
 fileFormatVersion: 2
 guid: 496865850bc003448bc901d009d37364
-timeCreated: 1516065434
+timeCreated: 1516503044
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
     21300000: Chest
-    21300002: BlankTile
-    21300004: BrickWall
-    21300006: BrickWall2
-    21300008: BaseColor
+    21300002: Blank
+    21300004: Wall
+    21300006: Wall2
+    21300008: Color
   externalObjects: {}
   serializedVersion: 4
   mipmaps:
@@ -41,7 +41,7 @@ TextureImporter:
     mipBias: -1
     wrapU: 1
     wrapV: 1
-    wrapW: -1
+    wrapW: 1
   nPOTScale: 0
   lightmap: 0
   compressionQuality: 50
@@ -99,7 +99,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: BlankTile
+      name: Blank
       rect:
         serializedVersion: 2
         x: 18
@@ -113,7 +113,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: BrickWall
+      name: Wall
       rect:
         serializedVersion: 2
         x: 35
@@ -127,7 +127,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: BrickWall2
+      name: Wall2
       rect:
         serializedVersion: 2
         x: 52
@@ -141,7 +141,7 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
     - serializedVersion: 2
-      name: BaseColor
+      name: Color
       rect:
         serializedVersion: 2
         x: 69

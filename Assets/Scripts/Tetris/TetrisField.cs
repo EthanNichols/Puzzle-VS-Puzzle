@@ -6,8 +6,8 @@ using UnityEngine.UI;
 public class TetrisField : PlayField
 {
 
-    public List<int> tileColors = new List<int>() {32, 35, 36, 37, 39, 41, 46};
-    public int backgroundSprite = 78;
+    public List<Sprite> tileSprites = new List<Sprite>();
+    public Sprite backgroundSprite;
 
     [HideInInspector]
     public GameObject tetrisPiece;
@@ -30,6 +30,7 @@ public class TetrisField : PlayField
     // Use this for initialization
     void Start()
     {
+        SetTileSprites();
 
         //Calculate the sice of the tiles
         CalcTileSize();
@@ -39,7 +40,7 @@ public class TetrisField : PlayField
         LoadResources();
 
         //Create the visible and hidden play field
-        CreateField(width, height, SpriteSheetManager.sprites["Tiles_" + backgroundSprite]);
+        CreateField(width, height, backgroundSprite);
         CreateTileBuffer(width, height);
 
         foreach (Vector2 pos in tilePositions.Keys)
@@ -71,6 +72,22 @@ public class TetrisField : PlayField
 
         if (clearLineTimer > 0) { clearLineTimer -= Time.deltaTime; }
         if (clearLineTimer <= 0 && linesToClear.Count > 0) { ClearLines(); }
+    }
+
+    public void SetTileSprites()
+    {
+        int darkness = 3;
+        string tile = "Blank";
+
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Tomato", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Cheese", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Lilac", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Spinach", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Water", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Cherry", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Chocolate", darkness));
+
+        backgroundSprite = SpriteSheetManager.GetSprite(tile, "Tarmac", darkness + 2);
     }
 
     /// <summary>
@@ -188,7 +205,7 @@ public class TetrisField : PlayField
         tetrisPiece.GetComponent<TetrisPiece>().shape = shape;
         tetrisPiece.GetComponent<TetrisPiece>().tileSize = tileSize;
         tetrisPiece.GetComponent<TetrisPiece>().field = this;
-        tetrisPiece.GetComponent<TetrisPiece>().tileSprite = SpriteSheetManager.sprites["Tiles_" + tileColors[randPiece]];
+        tetrisPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[randPiece];
 
         //Spawn the piece and set the tile location
         tetrisPiece.GetComponent<TetrisPiece>().SetFormation(spawnPos, pieceFormation);
@@ -271,10 +288,15 @@ public class TetrisField : PlayField
                 Vector2 pos = new Vector2(x, line);
                 tileOccupancy[pos] = false;
 
-                int spriteNum = int.Parse(tileObjects[pos].GetComponent<Image>().sprite.name.Split('_')[1]);
+                string fullSpriteName = tileObjects[pos].GetComponent<Image>().sprite.name;
 
-                Debug.Log(spriteNum);
-                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_" + (spriteNum - 32)];
+                Debug.Log(fullSpriteName);
+
+                string tile = fullSpriteName.Split('.')[0];
+                string color = fullSpriteName.Split('.')[1];
+                int darkness = int.Parse(fullSpriteName.Split('.')[2]);
+
+                tileObjects[pos].GetComponent<Image>().sprite = SpriteSheetManager.GetSprite(tile, color, darkness - 2);
             }
         }
 
@@ -308,7 +330,7 @@ public class TetrisField : PlayField
                 //If tile object doesn't exist continue
                 if (tileObjects[pos] == null)
                 {
-                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = SpriteSheetManager.sprites["Tiles_" + backgroundSprite];
+                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = backgroundSprite;
                     tileOccupancy[pos + Vector2.down * fallHeight] = false;
                     continue;
                 }

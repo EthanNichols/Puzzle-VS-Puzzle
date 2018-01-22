@@ -309,7 +309,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 815e2a40df75f1246a0d4d145d7714d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  players: 1
+  players: 4
   Canvas: {fileID: 513113876}
 --- !u!114 &1323579644
 MonoBehaviour:

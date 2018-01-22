@@ -8,6 +8,7 @@ public class TetrisPiece : MonoBehaviour
 
     [HideInInspector]
     public GameObject ghostPiece;
+    public bool display = false;
 
     public char shape;
     public Sprite tileSprite;
@@ -68,6 +69,8 @@ public class TetrisPiece : MonoBehaviour
     /// <param name="formation">The list of position each tile is at</param>
     public void SetFormation(Vector2 spawnPos, Queue<Vector2> formation)
     {
+        Vector2 centerOffset = Vector2.zero;
+
         //Set the formation of the piece
         foreach (Transform tile in transform)
         {
@@ -76,12 +79,29 @@ public class TetrisPiece : MonoBehaviour
             tile.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, tileSize);
             tile.GetComponent<Image>().sprite = tileSprite;
 
+            centerOffset += formation.Peek(); ;
+
             //Set the grid position of the tile piece
             tilePositions.Add(spawnPos + formation.Peek());
             tiles.Add(tile.gameObject);
 
             tile.gameObject.SetActive(false);
             formation.Dequeue();
+        }
+
+        if (display)
+        {
+            if (centerOffset.x > 0) { centerOffset.x = Mathf.Floor(centerOffset.x / 2); }
+            else { centerOffset.x = Mathf.Ceil(centerOffset.x / 2); }
+            if (centerOffset.y < 0) { centerOffset.y = Mathf.Floor(centerOffset.y / 2); }
+            else { centerOffset.y = Mathf.Ceil(centerOffset.y / 2); }
+
+            foreach (Transform tile in transform)
+            {
+                tile.transform.localPosition -= (Vector3)centerOffset * (tileSize / 2);
+                tile.gameObject.SetActive(true);
+            }
+            return;
         }
 
         //Set the position of the entire piece
@@ -106,6 +126,8 @@ public class TetrisPiece : MonoBehaviour
     /// </summary>
     private void Fall()
     {
+        if (display) { return; }
+
         do
         {
             //Make sure the piece can fall a tile
@@ -126,6 +148,11 @@ public class TetrisPiece : MonoBehaviour
             }
             else
             {
+                for (int i = 0; i < tilePositions.Count; i++)
+                {
+                    if (tilePositions[i].y < 20) { tiles[i].SetActive(true); }
+                    else { tiles[i].SetActive(false); }
+                }
                 if (ghostPiece == null) { fallingTimer = int.MaxValue; return; }
 
                 //The lines that could be clear
@@ -181,7 +208,7 @@ public class TetrisPiece : MonoBehaviour
         //Get input to rotate the piece
         if (Input.GetKeyDown(KeyCode.E)) { Rotate(1); }
         else if (Input.GetKeyDown(KeyCode.Q)) { Rotate(-1); }
-    
+
         //Get input to move the piece to the left
         if (Input.GetKey(KeyCode.A) &&
             !Input.GetKey(KeyCode.B))
@@ -203,8 +230,9 @@ public class TetrisPiece : MonoBehaviour
                 moveTimer = moveTimeReset;
             }
 
-        //Get input to make the piece fall a tile
-        } else if (Input.GetKey(KeyCode.S))
+            //Get input to make the piece fall a tile
+        }
+        else if (Input.GetKey(KeyCode.S))
         {
             if (moveTimer <= 0)
             {
@@ -219,7 +247,8 @@ public class TetrisPiece : MonoBehaviour
         {
             fallingTimer = int.MinValue;
             Fall();
-        } else
+        }
+        else
         {
             moveTimer = 0;
         }
@@ -261,7 +290,6 @@ public class TetrisPiece : MonoBehaviour
         //The new position, rotation, and 
         List<Vector2> newPositions = new List<Vector2>(tilePositions);
         int newRotation = rotation + direction;
-        Vector2 piecePos = transform.localPosition / tileSize;
 
         //Make sure it is only rotated in 4 directions
         if (newRotation < 0) { newRotation = 3; }
@@ -498,7 +526,7 @@ public class TetrisPiece : MonoBehaviour
         ghostPiece.GetComponent<TetrisPiece>().fallingTimerReset = 0;
         ghostPiece.GetComponent<TetrisPiece>().Fall();
 
-        for (int i=0; i<tilePositions.Count; i++)
+        for (int i = 0; i < tilePositions.Count; i++)
         {
             ghostPiece.GetComponent<TetrisPiece>().tiles[i].transform.localPosition = tiles[i].transform.localPosition;
         }

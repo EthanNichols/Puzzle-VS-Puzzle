@@ -45,9 +45,9 @@ public class PlayField : MonoBehaviour {
         background.transform.localPosition = Vector2.zero;
 
         //Create the play area with the given width and height
-        for (int x=-width / 2; x<width / 2; x++)
+        for (int x=-width / 2; x<width / 2 + width % 2; x++)
         {
-            for (int y=-height / 2; y<height / 2; y++)
+            for (int y=-height / 2; y<height / 2 + height % 2; y++)
             {
                 //Create the background tile and calculate the position that it has
                 GameObject newTile = Instantiate(tempBackgroundTile, Vector2.zero, Quaternion.identity, background.transform);

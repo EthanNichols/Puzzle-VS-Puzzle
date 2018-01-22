@@ -38,7 +38,7 @@ public class SpriteSheetManager : MonoBehaviour {
     {
         colorPalletes["Tomato"] = new List<Color>()     { hexColor("FDF5F1"), hexColor("FE935A"), hexColor("E25322"), hexColor("A82424"), hexColor("691B28"), hexColor("1B141E") };
         colorPalletes["Caramel"] = new List<Color>()    { hexColor("FDF5F1"), hexColor("FFBF89"), hexColor("E7825A"), hexColor("BE5340"), hexColor("7A321C"), hexColor("1B141E") };
-        colorPalletes["Chocolate"] = new List<Color>()   { hexColor("FDF5F1"), hexColor("FFBF89"), hexColor("D08058"), hexColor("974E49"), hexColor("5A303F"), hexColor("1B141E") };
+        colorPalletes["Chocolate"] = new List<Color>()  { hexColor("FDF5F1"), hexColor("FFBF89"), hexColor("D08058"), hexColor("974E49"), hexColor("5A303F"), hexColor("1B141E") };
         colorPalletes["Cheese"] = new List<Color>()     { hexColor("FDF5F1"), hexColor("FFC95C"), hexColor("EB8A06"), hexColor("BE5340"), hexColor("7A321C"), hexColor("1B141E") };
         colorPalletes["Spinach"] = new List<Color>()    { hexColor("FDF5F1"), hexColor("CDE042"), hexColor("68B229"), hexColor("257D2C"), hexColor("1B4E44"), hexColor("1B141E") };
         colorPalletes["Mint"] = new List<Color>()       { hexColor("FDF5F1"), hexColor("7BECBF"), hexColor("38AA91"), hexColor("29777E"), hexColor("25446C"), hexColor("1B141E") };
@@ -128,8 +128,11 @@ public class SpriteSheetManager : MonoBehaviour {
                 if (palleteNum <= 0) { palleteNum = 0; }
                 else if (palleteNum >= pallete.Count) { palleteNum = pallete.Count - 1; }
 
+                Color newColor = pallete[(pallete.Count - 1) - palleteNum];
+                newColor.a = croppedTexture.GetPixel(x, y).a;
+
                 //Set the new color of the pixel
-                croppedTexture.SetPixel(x, y, pallete[(pallete.Count - 1) - palleteNum]);
+                croppedTexture.SetPixel(x, y, newColor);
             }
         }
         //Apply the changes new texture

@@ -9,6 +9,7 @@ public class TetrisPiece : MonoBehaviour
     [HideInInspector]
     public GameObject ghostPiece;
     public bool display = false;
+    public int pieceID = -1;
 
     public char shape;
     public Sprite tileSprite;
@@ -204,6 +205,14 @@ public class TetrisPiece : MonoBehaviour
     {
         //The timer between automatic movement when a button is held down
         moveTimer -= Time.deltaTime;
+
+        if (Input.GetKey(KeyCode.C) &&
+            field.saved <= 0)
+        {
+            field.SavePiece(pieceID);
+            Destroy(ghostPiece);
+            Destroy(gameObject);
+        }
 
         //Get input to rotate the piece
         if (Input.GetKeyDown(KeyCode.E)) { Rotate(1); }

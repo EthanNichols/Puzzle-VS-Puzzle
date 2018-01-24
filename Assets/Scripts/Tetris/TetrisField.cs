@@ -15,6 +15,9 @@ public class TetrisField : PlayField
     public List<GameObject> nextPieces = new List<GameObject>();
     public GameObject tetrisPiece;
 
+    public GameObject savedPiece;
+    public int saved = 0;
+
     public int width = 10;
     public int height = 20;
 
@@ -41,7 +44,7 @@ public class TetrisField : PlayField
         //Calculate the sice of the tiles
         CalcTileSize();
 
-        transform.localPosition -= new Vector3((tileSize / nextAreaSize) * (blockCount / 2), 0);
+        transform.localPosition -= new Vector3((tileSize / nextAreaSize) * (blockCount / 2) + tileSize / 8, 0);
 
         //Load the resources for the play field
         tetrisPieceObj = Resources.Load("TetrisPiece") as GameObject;
@@ -50,8 +53,9 @@ public class TetrisField : PlayField
         //Create the visible and hidden play field
         CreateField(width, height, backgroundSprite);
         CreateTileBuffer(width, height);
+        //CreateBorder();
         CreateNextPieceArea();
-        CreateBorder();
+        CreateSavedPiece();
 
         foreach (Vector2 pos in tilePositions.Keys)
         {
@@ -61,15 +65,11 @@ public class TetrisField : PlayField
         //Set the spawn locations for tetris pieces
         spawnLocations.Add(new Vector2(width / 2, height));
         if (width % 2 == 0) { spawnLocations.Add(new Vector2(width / 2 - 1, height)); }
-
-        //TEMPERARY
-        SpawnPiece();
     }
 
     // Update is called once per frame
     void Update()
     {
-
         //If the player got a game over don't update
         if (gameOver) { return; }
 
@@ -85,6 +85,9 @@ public class TetrisField : PlayField
         if (clearLineTimer <= 0 && linesToClear.Count > 0) { ClearLines(); }
     }
 
+    /// <summary>
+    /// Creates/load the sprites that will be used for the play area and pieces
+    /// </summary>
     public void SetTileSprites()
     {
         int darkness = 3;
@@ -101,116 +104,206 @@ public class TetrisField : PlayField
         backgroundSprite = SpriteSheetManager.GetSprite(tile, "Tarmac", darkness + 2);
     }
 
+    /// <summary>
+    /// Create the border around the play area
+    /// </summary>
     private void CreateBorder()
     {
+        //Get the sprites that will make the border
         Sprite borderEdge = SpriteSheetManager.GetSprite("Border", "Tarmac", 2);
         Sprite borderCorner = SpriteSheetManager.GetSprite("BorderCorner", "Tarmac", 2);
 
+        //Create an empty object to hold the border
         GameObject border = new GameObject();
         border.name = "Border";
         border.transform.SetParent(transform);
         border.transform.localPosition = Vector2.zero;
 
+        //Get the temperary tile that is a base object
         GameObject tile = Resources.Load("Temp Background Tile") as GameObject;
 
         //Create the left border
-        GameObject leftBorder = Instantiate(tile);
+        GameObject leftBorder = Instantiate(tile, border.transform);
         leftBorder.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize / 2, height * tileSize);
         leftBorder.GetComponent<Image>().sprite = borderEdge;
-        leftBorder.transform.SetParent(border.transform);
         leftBorder.transform.localPosition = new Vector2((-width / 2) * tileSize, 0);
 
         //Create the right border
-        GameObject rightBorder = Instantiate(leftBorder);
-        rightBorder.transform.SetParent(border.transform);
+        GameObject rightBorder = Instantiate(leftBorder, Vector2.zero, Quaternion.Euler(0, 0, -180), border.transform);
         rightBorder.transform.localPosition = new Vector2((width / 2f) * tileSize, 0);
 
         //Create the top border
-        GameObject topBorder = Instantiate(leftBorder);
-        topBorder.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, width * tileSize);
-        topBorder.transform.SetParent(border.transform);
-        topBorder.transform.localRotation = Quaternion.Euler(0, 0, -90);
-        topBorder.transform.localPosition = new Vector2(0, (height / 2) * tileSize);
+        GameObject topBorder = Instantiate(leftBorder, Vector2.zero, Quaternion.Euler(0, 0, -90), border.transform);
+        topBorder.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize / 2, width * tileSize);
+        topBorder.transform.localPosition = new Vector2(0, (height / 2f) * tileSize);
 
         //Create the bottom border
-        GameObject bottomBorder = Instantiate(topBorder);
-        bottomBorder.transform.SetParent(border.transform);
-        bottomBorder.transform.localRotation = Quaternion.Euler(0, 0, 90);
-        bottomBorder.transform.localPosition = new Vector2(0, (-height / 2) * tileSize);
+        GameObject bottomBorder = Instantiate(topBorder, Vector2.zero, Quaternion.Euler(0, 0, 90), border.transform);
+        bottomBorder.transform.localPosition = new Vector3(0, (-height / 2) * tileSize);
 
-        /*
-        GameObject corner1 = Instantiate(tile);
-        corner1.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize, tileSize);
-        corner1.GetComponent<Image>().sprite = borderCorner;
-        corner1.transform.SetParent(border.transform);
-        corner1.transform.localRotation = Quaternion.Euler(0, 0, 180);
-        corner1.transform.localPosition = new Vector2(((-width - 1) / 2f) * tileSize, ((-height - 1) / 2f) * tileSize);
+        //Create the four corners of the border
+        for (int i=0; i<4; i++)
+        {
+            //Create the object
+            GameObject corner = Instantiate(tile, Vector2.zero, Quaternion.Euler(0, 0, 90 * i), border.transform);
+            corner.GetComponent<RectTransform>().sizeDelta = new Vector2(tileSize / 2, tileSize / 2f);
+            corner.GetComponent<Image>().sprite = borderCorner;
 
-        GameObject corner2 = Instantiate(corner1);
-        corner2.transform.SetParent(border.transform);
-        corner2.transform.localRotation = Quaternion.Euler(0, 0, 90);
-        corner2.transform.localPosition = new Vector2(((-width - 1) / 2f) * tileSize, ((height + 1) / 2f) * tileSize);
-        */
+            float localsize = tileSize / 4f;
+
+            //Set the position of the object
+            switch (i)
+            {
+                case 0: corner.transform.localPosition = new Vector2((width / 2f) * tileSize + localsize, (height / 2f) * tileSize + localsize + .1f); break;
+                case 1: corner.transform.localPosition = new Vector2((-width / 2f) * tileSize - localsize, (height / 2f) * tileSize + localsize + .1f); break;
+                case 2: corner.transform.localPosition = new Vector2((-width / 2f) * tileSize - localsize, (-height / 2f) * tileSize - localsize); break;
+                case 3: corner.transform.localPosition = new Vector2((width / 2f) * tileSize + localsize, (-height / 2f) * tileSize - localsize); break;
+            }
+        }
     }
 
+    /// <summary>
+    /// Create the next piece area and populate it with tetris pieces
+    /// </summary>
     private void CreateNextPieceArea()
     {
+        //Empty object to hold the next piece area
         GameObject nextPiecesObj = new GameObject();
 
-        GameObject nextPieceBackground = Resources.Load("Temp Background Tile") as GameObject;
-
+        //Base object for the next piece area
+        GameObject background = Resources.Load("Temp Background Tile") as GameObject;
+        
+        //Set the name, parent, and position of the empty object
         nextPiecesObj.name = "Next Pieces";
         nextPiecesObj.transform.SetParent(transform);
         nextPiecesObj.transform.localPosition = Vector2.zero;
 
+        //Create the correct amount of indicators
         for (int i=0; i<nextPieceCount; i++)
         {
+            //Add a random piece to the queue
             int randPiece = Random.Range(0, 7);
             pieceOrder.Enqueue(randPiece);
 
-            Vector2 pos = new Vector2(width / 2 * tileSize + (tileSize / nextAreaSize) * 2, height / 2 * tileSize - (tileSize / nextAreaSize) * 2 - (tileSize / nextAreaSize) * blockCount * i);
+            //Determine the position of the next piece
+            Vector2 pos = new Vector2(width / 2 * tileSize + (tileSize / nextAreaSize) * 2 + tileSize / 4, height / 2 * tileSize - (tileSize / nextAreaSize) * 2 - (tileSize / nextAreaSize) * blockCount * i);
 
-            GameObject newBackground = Instantiate(nextPieceBackground);
+            //Create a new area for the next piece to be viewed
+            GameObject newBackground = Instantiate(background, pos, Quaternion.identity, nextPiecesObj.transform);
             newBackground.GetComponent<RectTransform>().sizeDelta = new Vector2((tileSize / nextAreaSize) * blockCount, (tileSize / nextAreaSize) * blockCount);
-            newBackground.transform.SetParent(nextPiecesObj.transform);
             newBackground.transform.localPosition = pos;
 
+            //Split the sprite name up for the background color
             string color = backgroundSprite.name.Split('.')[1];
             int darkness = int.Parse(backgroundSprite.name.Split('.')[2].ToString());
 
+            //Create a sprite with the new color info
             newBackground.GetComponent<Image>().sprite = SpriteSheetManager.GetSprite("Color", color, darkness);
 
+            //Create a tetris piece to display in the next area
             GameObject newNextPiece = Instantiate(tetrisPieceObj);
             newNextPiece.transform.SetParent(nextPiecesObj.transform);
             newNextPiece.transform.localPosition = pos;
 
+            //Set information about the next tetris piece
             newNextPiece.GetComponent<TetrisPiece>().fallingTimer = int.MaxValue;
             newNextPiece.GetComponent<TetrisPiece>().tileSize = tileSize / 2f;
             newNextPiece.GetComponent<TetrisPiece>().field = this;
             newNextPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[randPiece];
             newNextPiece.GetComponent<TetrisPiece>().display = true;
-
             newNextPiece.GetComponent<TetrisPiece>().SetFormation(newNextPiece.transform.localPosition, GetFormation(randPiece));
 
+            //Add the tetris piece to a list of next piece
             nextPieces.Add(newNextPiece);
         }
     }
 
+    /// <summary>
+    /// Update the formation of the next tetris pieces
+    /// </summary>
     private void UpdateNextPieces()
     {
+        //Make sure all the next pieces are filled
         while (pieceOrder.Count < nextPieceCount)
         {
             int randPiece = Random.Range(0, 7);
             pieceOrder.Enqueue(randPiece);
         }
 
+        //Copy the queue of the tetris pieces
         Queue<int> localQueue = new Queue<int>(pieceOrder);
 
+        //Set the new formation of the next tetris pieces.
         foreach(GameObject nextPiece in nextPieces)
         {
             nextPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[localQueue.Peek()];
             nextPiece.GetComponent<TetrisPiece>().SetFormation(nextPiece.transform.localPosition, GetFormation(localQueue.Dequeue()));
         }
+    }
+
+    /// <summary>
+    /// Create the area for the saved piece to be displayed
+    /// </summary>
+    private void CreateSavedPiece()
+    {
+        //Base object to edit for the background
+        GameObject background = Resources.Load("Temp Background Tile") as GameObject;
+
+        //Calculate the position of the area
+        Vector2 pos = new Vector2((-width / 2) * tileSize + (tileSize / nextAreaSize) * (blockCount / 2), height / 2 * tileSize + (tileSize / nextAreaSize) * 2 + tileSize / 4);
+
+        //Create the background for the saved area
+        GameObject newBackground = Instantiate(background, pos, Quaternion.identity, transform);
+        newBackground.transform.localPosition = pos;
+        newBackground.GetComponent<RectTransform>().sizeDelta = new Vector2((tileSize / nextAreaSize) * blockCount, (tileSize / nextAreaSize) * blockCount);
+
+        //Get information about the color that the sprite should be
+        string color = backgroundSprite.name.Split('.')[1];
+        int darkness = int.Parse(backgroundSprite.name.Split('.')[2].ToString());
+
+        //Create a sprite with the new color info
+        newBackground.GetComponent<Image>().sprite = SpriteSheetManager.GetSprite("Color", color, darkness);
+
+        //Create a tetris piece to display in the next area
+        savedPiece = Instantiate(tetrisPieceObj);
+        savedPiece.transform.SetParent(newBackground.transform);
+        savedPiece.transform.localPosition = Vector2.zero;
+
+        //Set information about the next tetris piece
+        savedPiece.GetComponent<TetrisPiece>().fallingTimer = int.MaxValue;
+        savedPiece.GetComponent<TetrisPiece>().tileSize = tileSize / 2f;
+        savedPiece.GetComponent<TetrisPiece>().field = this;
+        savedPiece.GetComponent<TetrisPiece>().display = true;
+
+        //Set all the tiles in the piece to be inactive
+        foreach (Transform tiles in savedPiece.transform)
+        {
+            tiles.gameObject.SetActive(false);
+        }
+    }
+
+    /// <summary>
+    /// Save tetris piece that was passed
+    /// </summary>
+    /// <param name="piece"></param>
+    public void SavePiece(int piece)
+    {
+        //The previous piece that was saved
+        int oldPiece = savedPiece.GetComponent<TetrisPiece>().pieceID;
+
+        //Set the information about the new saved piece
+        savedPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[piece];
+        savedPiece.GetComponent<TetrisPiece>().SetFormation(savedPiece.transform.localPosition, GetFormation(piece));
+        savedPiece.GetComponent<TetrisPiece>().pieceID = piece;
+
+        //The counter before another piece can be saved
+        saved = 2;
+
+        //If there is no saved piece return
+        if (oldPiece == -1) { return; }
+
+        //Spawn the previously saved piece
+        SpawnPiece(oldPiece);
     }
 
     /// <summary>
@@ -235,15 +328,15 @@ public class TetrisField : PlayField
     /// <summary>
     /// Spawn a random piece on the play field
     /// </summary>
-    private void SpawnPiece()
+    private void SpawnPiece(int piece = -1)
     {
-        int pieceNum = pieceOrder.Dequeue();
+        if (piece == -1) { piece = pieceOrder.Dequeue(); }
 
-        Queue<Vector2> pieceFormation = GetFormation(pieceNum);
+        Queue<Vector2> pieceFormation = GetFormation(piece);
         char shape = ' ';
 
         //Set the shape of the tetris piece
-        switch (pieceNum)
+        switch (piece)
         {
             case 0: shape = 'i'; break;
             case 1: shape = 'o'; break;
@@ -256,7 +349,7 @@ public class TetrisField : PlayField
 
         //Set the spawn location for the piece
         Vector2 spawnPos = spawnLocations[0];
-        if (pieceNum <= 1) { spawnPos = spawnLocations[spawnLocations.Count - 1]; }
+        if (piece <= 1) { spawnPos = spawnLocations[spawnLocations.Count - 1]; }
 
         //Create a new piece
         tetrisPiece = Instantiate(tetrisPieceObj, transform);
@@ -266,10 +359,15 @@ public class TetrisField : PlayField
         tetrisPiece.GetComponent<TetrisPiece>().shape = shape;
         tetrisPiece.GetComponent<TetrisPiece>().tileSize = tileSize;
         tetrisPiece.GetComponent<TetrisPiece>().field = this;
-        tetrisPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[pieceNum];
+        tetrisPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[piece];
+
+        tetrisPiece.GetComponent<TetrisPiece>().pieceID = piece;
 
         //Spawn the piece and set the tile location
         tetrisPiece.GetComponent<TetrisPiece>().SetFormation(spawnPos, pieceFormation);
+
+        //Set that the saved piece can be switched and isn't saved
+        saved--;
     }
 
     /// <summary>

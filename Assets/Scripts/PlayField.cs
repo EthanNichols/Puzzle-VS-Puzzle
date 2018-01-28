@@ -5,6 +5,9 @@ using UnityEngine.UI;
 
 public class PlayField : MonoBehaviour {
 
+    public int width;
+    public int height;
+
     [HideInInspector]
     public int players;
 
@@ -29,6 +32,22 @@ public class PlayField : MonoBehaviour {
     public void LoadResources()
     {
         tempBackgroundTile = Resources.Load("Temp Background Tile") as GameObject;
+    }
+
+    /// <summary>
+    /// Calculate the size that the tiles will be in the playfield
+    /// </summary>
+    public void CalcTileSize(int padding)
+    {
+        //Calculate the largest tile size possible, then set the tilesize
+        if ((Screen.width / players) / width > Screen.height / height)
+        {
+            tileSize = Screen.height / (height + padding);
+        }
+        else
+        {
+            tileSize = (Screen.width / players) / (width + padding);
+        }
     }
 
     /// <summary>

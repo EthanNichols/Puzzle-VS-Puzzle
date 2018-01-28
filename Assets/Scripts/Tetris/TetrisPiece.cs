@@ -499,7 +499,7 @@ public class TetrisPiece : MonoBehaviour
         //Test if the new positions won't be in a place that is already occupied
         for (int i = 0; i < newPositions.Count; i++)
         {
-            if (field.TestOccupancy(rotationCenter + newPositions[i])) { return; }
+            if (field.TestOccupancy(rotationCenter + newPositions[i])) { break; }
         }
 
         //Set the new positions of the tiles relative to the center rotation point

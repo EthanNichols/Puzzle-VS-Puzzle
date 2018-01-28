@@ -18,9 +18,6 @@ public class TetrisField : PlayField
     public GameObject savedPiece;
     public int saved = 0;
 
-    public int width = 10;
-    public int height = 20;
-
     float nextAreaSize = 1.75f;
     float blockCount = 4f;
 
@@ -35,16 +32,19 @@ public class TetrisField : PlayField
 
     private Dictionary<Vector2, bool> tileOccupancy = new Dictionary<Vector2, bool>();
 
-
     // Use this for initialization
     void Start()
     {
+        //TEMP
+        width = 10;
+        height = 20;
+
         SetTileSprites();
 
         //Calculate the sice of the tiles
-        CalcTileSize();
+        CalcTileSize(3);
 
-        transform.localPosition -= new Vector3((tileSize / nextAreaSize) * (blockCount / 2) + tileSize / 8, 0);
+        transform.localPosition -= new Vector3((tileSize / nextAreaSize) * (blockCount / 2) + tileSize / 8, (tileSize / nextAreaSize) * (blockCount / 2) + tileSize / 8);
 
         //Load the resources for the play field
         tetrisPieceObj = Resources.Load("TetrisPiece") as GameObject;
@@ -304,25 +304,6 @@ public class TetrisField : PlayField
 
         //Spawn the previously saved piece
         SpawnPiece(oldPiece);
-    }
-
-    /// <summary>
-    /// Calculate the size that the tiles will be in the playfield
-    /// </summary>
-    private void CalcTileSize()
-    {
-        //Padding between the edge of the possible area and the play area
-        int padding = 3;
-
-        //Calculate the largest tile size possible, then set the tilesize
-        if ((Screen.width / players) / width > Screen.height / height)
-        {
-            tileSize = Screen.height / (height + padding);
-        }
-        else
-        {
-            tileSize = (Screen.width / players) / (width + padding);
-        }
     }
 
     /// <summary>

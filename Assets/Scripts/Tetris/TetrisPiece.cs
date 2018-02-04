@@ -298,6 +298,7 @@ public class TetrisPiece : MonoBehaviour
     {
         //The new position, rotation, and 
         List<Vector2> newPositions = new List<Vector2>(tilePositions);
+        List<Vector2> offsets = new List<Vector2>() { Vector2.zero };
         int newRotation = rotation + direction;
 
         //Make sure it is only rotated in 4 directions
@@ -496,11 +497,122 @@ public class TetrisPiece : MonoBehaviour
             return;
         }
 
-        //Test if the new positions won't be in a place that is already occupied
-        for (int i = 0; i < newPositions.Count; i++)
+        //Set all the offset tests for pieces that aren't 'i'
+        if (shape != 'i')
         {
-            if (field.TestOccupancy(rotationCenter + newPositions[i])) { break; }
+
+            //Split up the similar rotations
+            if ((rotation == 0 && newRotation == 1) ||
+                (rotation == 2 && newRotation == 1) ||
+                (rotation == 3 && newRotation == 2) ||
+                (rotation == 3 && newRotation == 0))
+            {
+                //Second offset
+                offsets.Add(new Vector2(-1, 0));
+
+                //Split the rotations again and add the rest of the tests
+                if (rotation == 3)
+                {
+                    offsets.Add(new Vector2(1, -1));
+                    offsets.Add(new Vector2(0, 2));
+                    offsets.Add(new Vector2(1, 2));
+                }
+                else
+                {
+                    offsets.Add(new Vector2(1, 1));
+                    offsets.Add(new Vector2(0, -2));
+                    offsets.Add(new Vector2(1, -2));
+                }
+            }
+            else
+            {
+                //Second offset
+                offsets.Add(new Vector2(1, 0));
+
+                //Split the rotations again and add the rest of the tests
+                if (rotation == 1)
+                {
+                    offsets.Add(new Vector2(-1, -1));
+                    offsets.Add(new Vector2(0, 2));
+                    offsets.Add(new Vector2(-1, 2));
+                }
+                else
+                {
+                    offsets.Add(new Vector2(-1, 1));
+                    offsets.Add(new Vector2(0, -2));
+                    offsets.Add(new Vector2(-1, -2));
+                }
+            }
         }
+        else
+        {
+            //Determing the similar rotations and set the offset tests
+            if ((rotation == 0 && newRotation == 1) ||
+                (rotation == 3 && newRotation == 2))
+            {
+                offsets.Add(new Vector2(-2, 0));
+                offsets.Add(new Vector2(1, 0));
+                offsets.Add(new Vector2(-2, -1));
+                offsets.Add(new Vector2(1, 2));
+            }
+            else if ((rotation == 1 && newRotation == 0) ||
+              (rotation == 2 && newRotation == 3))
+            {
+                offsets.Add(new Vector2(2, 0));
+                offsets.Add(new Vector2(-1, 0));
+                offsets.Add(new Vector2(2, 1));
+                offsets.Add(new Vector2(-1, -2));
+            }
+            else if ((rotation == 1 && newRotation == 2) ||
+              (rotation == 0 && newRotation == 3))
+            {
+                offsets.Add(new Vector2(-1, 0));
+                offsets.Add(new Vector2(2, 0));
+                offsets.Add(new Vector2(-1, 2));
+                offsets.Add(new Vector2(2, -1));
+            }
+            else if ((rotation == 2 && newRotation == 1) ||
+              (rotation == 3 && newRotation == 0))
+            {
+                offsets.Add(new Vector2(1, 0));
+                offsets.Add(new Vector2(-2, 0));
+                offsets.Add(new Vector2(1, -2));
+                offsets.Add(new Vector2(-2, 1));
+            }
+        }
+
+        //Whether the piece can roatate and the offset test
+        bool canRotate = false;
+        Vector2 offset = Vector2.zero;
+
+        //Loop through all of the offset tests
+        for (int p = 0; p < offsets.Count; p++)
+        {
+            //Set the offset test
+            offset = offsets[p];
+
+            //Test if the new positions won't be in a place that is already occupied
+            for (int i = 0; i < newPositions.Count; i++)
+            {
+                //If the tile will be in an occupied space set that it can't rotate skip the rest of this test
+                if (field.TestOccupancy((rotationCenter + offset) + newPositions[i])) {
+                    canRotate = false;
+                    break;
+                } else
+                {
+                    canRotate = true;
+                }
+            }
+
+            //If the piece can rotate break out of the tests
+            if (canRotate) { break; }
+        }
+
+        //If the piece can't rotate return
+        if (!canRotate) { return; }
+
+        //Set the new center position for the piece
+        transform.localPosition = field.tilePositions[rotationCenter += offset];
 
         //Set the new positions of the tiles relative to the center rotation point
         for (int i = 0; i < newPositions.Count; i++)
@@ -516,6 +628,7 @@ public class TetrisPiece : MonoBehaviour
         //Set the new rotation of the piece
         rotation = newRotation;
 
+        //Reset where the ghost piece is located
         ResetGhostPiece();
     }
 
@@ -526,15 +639,18 @@ public class TetrisPiece : MonoBehaviour
     {
         if (!ghostPiece) { return; }
 
+        //Reset the piece position information
         ghostPiece.transform.localPosition = transform.localPosition;
         ghostPiece.GetComponent<TetrisPiece>().rotationCenter = rotationCenter;
         ghostPiece.GetComponent<TetrisPiece>().rotation = rotation;
         ghostPiece.GetComponent<TetrisPiece>().tilePositions = new List<Vector2>(tilePositions);
 
+        //Make the piece fall infinitly
         ghostPiece.GetComponent<TetrisPiece>().fallingTimer = int.MinValue;
         ghostPiece.GetComponent<TetrisPiece>().fallingTimerReset = 0;
         ghostPiece.GetComponent<TetrisPiece>().Fall();
 
+        //Set the local tile positions
         for (int i = 0; i < tilePositions.Count; i++)
         {
             ghostPiece.GetComponent<TetrisPiece>().tiles[i].transform.localPosition = tiles[i].transform.localPosition;

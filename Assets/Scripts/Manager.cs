@@ -12,6 +12,7 @@ public class Manager : MonoBehaviour {
     public enum fieldTypes
     {
         tetris,
+        swordFight,
         idleMoneyExchange
     }
 
@@ -46,6 +47,9 @@ public class Manager : MonoBehaviour {
             {
                 case fieldTypes.tetris:
                     field.AddComponent<TetrisField>();
+                    break;
+                case fieldTypes.swordFight:
+                    field.AddComponent<SwordFightField>();
                     break;
                 case fieldTypes.idleMoneyExchange:
                     field.AddComponent<IdleMoneyExchangeField>();

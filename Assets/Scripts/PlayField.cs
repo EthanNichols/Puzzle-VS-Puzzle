@@ -23,7 +23,6 @@ public class PlayField : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		
 	}
 
     /// <summary>
@@ -99,5 +98,13 @@ public class PlayField : MonoBehaviour {
                 tileObjects[new Vector2(x, y)] = null;
             }
         }
+    }
+
+    public void ShakeField(float duration, Vector3 position = default(Vector3), Vector3 direction = default(Vector3))
+    {
+        FieldShake shaker = GetComponent<FieldShake>();
+
+        shaker.shakeDuration = duration;
+        shaker.shakePosition = position;
     }
 }

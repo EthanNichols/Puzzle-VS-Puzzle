@@ -49,7 +49,7 @@ public class SpriteSheetManager : MonoBehaviour {
         colorPalletes["Cherry"] = new List<Color>()     { hexColor("FDF5F1"), hexColor("FFB2B2"), hexColor("EB7171"), hexColor("B1415C"), hexColor("75224A"), hexColor("1B141E") };
         colorPalletes["Ancient"] = new List<Color>()    { hexColor("FDF5F1"), hexColor("E3C4B0"), hexColor("B18E8E"), hexColor("74647F"), hexColor("3E3F64"), hexColor("1B141E") };
         colorPalletes["Green Tea"] = new List<Color>()  { hexColor("FDF5F1"), hexColor("DFDD9A"), hexColor("9CAA74"), hexColor("617B47"), hexColor("2A4E32"), hexColor("1B141E") };
-        colorPalletes["Power"] = new List<Color>()      { hexColor("FDF5F1"), hexColor("B8D8D1"), hexColor("759DA9"), hexColor("526A98"), hexColor("3E3F64"), hexColor("1B141E") };
+        colorPalletes["Powder"] = new List<Color>()      { hexColor("FDF5F1"), hexColor("B8D8D1"), hexColor("759DA9"), hexColor("526A98"), hexColor("3E3F64"), hexColor("1B141E") };
         colorPalletes["Tarmac"] = new List<Color>()     { hexColor("FDF5F1"), hexColor("CCC1BE"), hexColor("918692"), hexColor("5D5B6E"), hexColor("38384C"), hexColor("1B141E") };
     }
 

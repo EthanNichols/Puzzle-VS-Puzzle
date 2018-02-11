@@ -254,6 +254,7 @@ public class TetrisPiece : MonoBehaviour
         //Get input to put the piece in its place
         else if (Input.GetKeyDown(KeyCode.Space))
         {
+            //field.ShakeField(.05f, Vector3.down * tileSize * .05f);
             fallingTimer = int.MinValue;
             Fall();
         }

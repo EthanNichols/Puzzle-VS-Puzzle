@@ -9,6 +9,8 @@ public class TetrisField : PlayField
     public List<Sprite> tileSprites = new List<Sprite>();
     public Sprite backgroundSprite;
 
+    public bool addLine = true;
+
     [HideInInspector]
     public int nextPieceCount = 5;
     public Queue<int> pieceOrder = new Queue<int>();
@@ -40,6 +42,7 @@ public class TetrisField : PlayField
         height = 20;
 
         SetTileSprites();
+        gameObject.AddComponent<FieldShake>();
 
         //Calculate the sice of the tiles
         CalcTileSize(3);
@@ -100,6 +103,7 @@ public class TetrisField : PlayField
         tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Water", darkness));
         tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Cherry", darkness));
         tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Chocolate", darkness));
+        tileSprites.Add(SpriteSheetManager.GetSprite(tile, "Powder", darkness));
 
         backgroundSprite = SpriteSheetManager.GetSprite(tile, "Tarmac", darkness + 2);
     }
@@ -142,7 +146,7 @@ public class TetrisField : PlayField
         bottomBorder.transform.localPosition = new Vector3(0, (-height / 2) * tileSize);
 
         //Create the four corners of the border
-        for (int i=0; i<4; i++)
+        for (int i = 0; i < 4; i++)
         {
             //Create the object
             GameObject corner = Instantiate(tile, Vector2.zero, Quaternion.Euler(0, 0, 90 * i), border.transform);
@@ -172,14 +176,14 @@ public class TetrisField : PlayField
 
         //Base object for the next piece area
         GameObject background = Resources.Load("Temp Background Tile") as GameObject;
-        
+
         //Set the name, parent, and position of the empty object
         nextPiecesObj.name = "Next Pieces";
         nextPiecesObj.transform.SetParent(transform);
         nextPiecesObj.transform.localPosition = Vector2.zero;
 
         //Create the correct amount of indicators
-        for (int i=0; i<nextPieceCount; i++)
+        for (int i = 0; i < nextPieceCount; i++)
         {
             //Add a random piece to the queue
             int randPiece = Random.Range(0, 7);
@@ -234,7 +238,7 @@ public class TetrisField : PlayField
         Queue<int> localQueue = new Queue<int>(pieceOrder);
 
         //Set the new formation of the next tetris pieces.
-        foreach(GameObject nextPiece in nextPieces)
+        foreach (GameObject nextPiece in nextPieces)
         {
             nextPiece.GetComponent<TetrisPiece>().tileSprite = tileSprites[localQueue.Peek()];
             nextPiece.GetComponent<TetrisPiece>().SetFormation(nextPiece.transform.localPosition, GetFormation(localQueue.Dequeue()));
@@ -446,11 +450,12 @@ public class TetrisField : PlayField
     public void PlaceTile(Vector2 pos, GameObject tile)
     {
         //Set the gameobject if there isn't one set already
-        if (tileObjects[pos] == null)
+        if (!tileObjects[pos])
         {
             GameObject newTile = Instantiate(tile);
             newTile.transform.SetParent(transform);
             newTile.SetActive(false);
+            newTile.name = "Temp";
 
             tileObjects[pos] = newTile;
         }
@@ -535,13 +540,16 @@ public class TetrisField : PlayField
                 Vector2 pos = new Vector2(x, y);
 
                 //Go to the next tile if there is no gameobject
-                if (tileObjects[pos + Vector2.down * fallHeight] == null) { continue; }
+                //if (!tileObjects[pos + Vector2.down * fallHeight]) { continue; }
 
                 //If tile object doesn't exist continue
-                if (tileObjects[pos] == null)
+                if (!tileObjects[pos])
                 {
-                    tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = backgroundSprite;
-                    tileOccupancy[pos + Vector2.down * fallHeight] = false;
+                    if (tileObjects[pos + Vector2.down * fallHeight])
+                    {
+                        tileObjects[pos + Vector2.down * fallHeight].GetComponent<Image>().sprite = backgroundSprite;
+                        tileOccupancy[pos + Vector2.down * fallHeight] = false;
+                    }
                     continue;
                 }
 
@@ -553,11 +561,48 @@ public class TetrisField : PlayField
                 tileOccupancy[pos] = false;
 
                 //Destroy the gameobject if the position isn't in the visible play area
-                if (pos.y >= 20) { Destroy(tileObjects[pos]); }
+                //if (pos.y >= 20) Destroy(tileObjects[pos]);
             }
         }
 
         //Clear the list of lines that need to be removed
         linesToClear.Clear();
+    }
+
+    private void AddLines(int lineCount)
+    {
+        //Get the offset position for the new tile position
+        Vector2 posOffset = Vector2.up * lineCount;
+
+        //Loop through the play area
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = (height * 2 - 1) - lineCount; y >= 0; y--)
+            {
+
+                //The position of the current tile
+                Vector2 pos = new Vector2(x, y);
+
+                //If the tile isn't occupied go to the next tile
+                if (!tileObjects[pos]) continue;
+
+                //If the current tile is occupied place the tile in the new position
+                if (tileOccupancy[pos])
+                {
+                    PlaceTile(pos + posOffset, tileObjects[pos]);
+                }
+
+                //Set the sprite of the image to background, and make the tile unoccupied
+                tileObjects[pos].GetComponent<Image>().sprite = backgroundSprite;
+                tileOccupancy[pos] = false;
+
+                //If the tile's y position is below the lines being created set blocking tiles in the position
+                if (y < lineCount)
+                {
+                    tileObjects[pos].GetComponent<Image>().sprite = tileSprites[7];
+                    tileOccupancy[pos] = true;
+                }
+            }
+        }
     }
 }
